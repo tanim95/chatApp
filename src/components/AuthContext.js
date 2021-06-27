@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { auth } from '../firebase';
 
@@ -8,18 +8,24 @@ export const AuthContext = React.createContext({
 
 export const AuthProvider = (props) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState();
+  const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(true);
   const history = useHistory();
+
   useEffect(() => {
-    auth.onAuthStateChanged((userData) => {
-      setUser(userData);
+    auth.onAuthStateChanged((usr) => {
+      setUser(usr);
       setLoading(false);
-      if (user) history.push('/chats');
+      if (user === null) history.push('/chats');
+
+      return function cleanup() {
+        setMounted(false);
+      };
     });
   }, [user, history]);
 
   return (
-    <AuthContext.Provider value={user}>
+    <AuthContext.Provider value={{ user }}>
       {!loading && props.children}
     </AuthContext.Provider>
   );
